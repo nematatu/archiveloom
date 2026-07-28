@@ -1,8 +1,10 @@
 # ArchiveLoom
 
-ArchiveLoom is a cross-platform, adapter-driven CLI for building reliable local media archives from sources you are authorized to download.
+ArchiveLoom is a cross-platform engine for building reliable bulk media downloaders for sources you are authorized to download. **It is not a universal website scraper.**
 
-It separates site discovery from download execution, keeps partial files isolated, verifies completed media with `ffprobe`, and renders progress in a fixed terminal region.
+It can download direct media, HLS, and DASH URLs, or a JSON collection of known media URLs. An ordinary webpage works only when a compatible site adapter knows how to discover that site's media. DRM and access-control bypass are intentionally unsupported.
+
+The project's purpose is to keep site-specific discovery small while reusing the difficult operational parts: selection, bounded parallelism, restart handling, external-drive safeguards, FFmpeg execution, fixed progress, and final verification.
 
 ## Start here
 

@@ -25,6 +25,21 @@
 > [!IMPORTANT]
 > ArchiveLoom is in alpha. Its safety model and plugin API are usable, but the first stable release and signed standalone binaries are still on the roadmap.
 
+## What ArchiveLoom is — and is not
+
+**ArchiveLoom is a reusable engine for building reliable bulk media downloaders. It is not a universal website scraper.**
+
+Its purpose is to stop every site integration from reimplementing the difficult operational parts: collection selection, bounded parallelism, restart handling, fixed progress, external-drive safeguards, FFmpeg execution, and output verification. Site-specific discovery stays in a small adapter that can be developed and reviewed independently.
+
+| What you give ArchiveLoom | Does it work out of the box? |
+|---|---|
+| A direct media, HLS (`.m3u8`), or DASH (`.mpd`) URL | **Yes** |
+| An ArchiveLoom JSON collection containing known media URLs | **Yes** |
+| An ordinary webpage containing an unknown player or media catalog | **Only with a compatible site adapter** |
+| DRM-protected media or access-control bypass | **No, and this is intentionally unsupported** |
+
+If a site adapter does not exist, a developer—or an AI coding agent following the [engineering blueprint](docs/engineering-blueprint.ja.md)—must first inspect that site's authorized public interface and implement its discovery logic. Installing ArchiveLoom alone does not make arbitrary webpage URLs downloadable.
+
 ArchiveLoom is a cross-platform CLI/TUI for archiving **collections** of media you own or are authorized to download. It separates a dependable download engine from small, reviewable site adapters, so one site changing does not destabilize the rest of the application.
 
 It is designed for the awkward jobs that a browser download button does not solve: dozens of long recordings, multiple dates or categories, resumable overnight runs, external-drive-only storage, clear progress, and deterministic verification.
