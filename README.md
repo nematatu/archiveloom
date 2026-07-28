@@ -44,6 +44,58 @@ ArchiveLoom is a cross-platform CLI/TUI for archiving **collections** of media y
 
 It is designed for the awkward jobs that a browser download button does not solve: dozens of long recordings, multiple dates or categories, resumable overnight runs, external-drive-only storage, clear progress, and deterministic verification.
 
+## What you can use today
+
+### 1. Download one known media URL
+
+If you already have the actual media URL—not merely the webpage that contains a player—ArchiveLoom can inspect and download it directly:
+
+```console
+archiveloom download "https://example.com/video/master.m3u8" \
+  --output "/path/to/external-drive/archive" \
+  --check-only
+
+archiveloom download "https://example.com/video/master.m3u8" \
+  --output "/path/to/external-drive/archive"
+```
+
+### 2. Select and download several known media URLs
+
+Put the items in an ArchiveLoom collection file such as [`examples/collection.json`](examples/collection.json), then open the interactive selector:
+
+```console
+archiveloom download collection.json \
+  --output "/path/to/external-drive/archive" \
+  --interactive \
+  --jobs 2
+```
+
+```text
+ArchiveLoom
+
+[x] 2026-07-23 · Stage 01
+[x] 2026-07-23 · Stage 02
+[ ] 2026-07-24 · Stage 01
+[x] 2026-07-24 · Stage 02
+
+j/k or ↑/↓  Move     Space  Toggle     a  Select all
+Enter        Continue q      Quit
+```
+
+### 3. Support a normal website page
+
+A normal page such as `https://example.com/event` requires a site adapter that understands that site's dates, categories, pagination, player data, and media identifiers. Generate a plugin skeleton with:
+
+```console
+archiveloom adapters scaffold example_site --output ./plugins
+```
+
+You can give the site URL and the [engineering blueprint](docs/engineering-blueprint.ja.md) to a developer or AI coding agent and ask it to implement and test that adapter. Once installed, the adapter turns the site's page structure into the same normalized collection used by the download engine.
+
+### What about InHigh TV?
+
+ArchiveLoom grew out of lessons learned while building a separate InHigh TV-specific downloader, but that downloader is **not bundled** with ArchiveLoom. Version 0.1.0 does not include an InHigh TV adapter, so passing an InHigh TV webpage URL to ArchiveLoom does not currently discover its archive videos. A separately developed and installed adapter would be required.
+
 <p align="center">
   <img src="assets/screenshots/dashboard.svg" width="900" alt="ArchiveLoom fixed terminal dashboard">
 </p>

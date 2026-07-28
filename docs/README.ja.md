@@ -31,6 +31,104 @@ ArchiveLoomは、自分が所有している、または保存を許可されて
 
 対応アダプターが存在しないサイトでは、最初に開発者またはAIコーディングエージェントが、利用を許可された公開インターフェースを調査して発見処理を実装する必要があります。ArchiveLoomをインストールしただけで、任意のWebページURLを保存できるようになるわけではありません。実装手順は[AI・実装者向け設計ブループリント](engineering-blueprint.ja.md)にまとめています。
 
+## 現在すぐ使えるケース
+
+### 1. HLSなど、実際の動画URLが分かっている
+
+サイトページのURLではなく、`master.m3u8`などの実際の動画URLが分かっている場合は、そのまま確認・保存できます。最初に`--check-only`で書き込みをせず確認します。
+
+```console
+archiveloom --lang ja download \
+  "https://example.com/video/master.m3u8" \
+  --output "/Volumes/ExternalHDD/archive" \
+  --check-only
+```
+
+確認後、`--check-only`を外すと保存を開始します。
+
+```console
+archiveloom --lang ja download \
+  "https://example.com/video/master.m3u8" \
+  --output "/Volumes/ExternalHDD/archive"
+```
+
+### 2. 分かっている複数の動画URLから選んで保存する
+
+動画一覧を`collection.json`へ記載します。
+
+```json
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "2026-07-23-court-01",
+      "title": "7月23日 コート1",
+      "url": "https://example.com/court01/master.m3u8",
+      "protocol": "hls",
+      "filename": "2026-07-23_01.mp4"
+    },
+    {
+      "id": "2026-07-23-court-02",
+      "title": "7月23日 コート2",
+      "url": "https://example.com/court02/master.m3u8",
+      "protocol": "hls",
+      "filename": "2026-07-23_02.mp4"
+    }
+  ]
+}
+```
+
+対話形式で動画を選択し、2本ずつ並列処理する例です。
+
+```console
+archiveloom --lang ja download collection.json \
+  --output "/Volumes/ExternalHDD/archive" \
+  --interactive \
+  --jobs 2
+```
+
+```text
+ArchiveLoom
+
+[x] 2026-07-23 コート01
+[x] 2026-07-23 コート02
+[ ] 2026-07-24 コート01
+[x] 2026-07-24 コート02
+
+j/k・↑/↓  移動       Space  選択・解除
+a          全選択     Enter  決定
+q          終了
+```
+
+## 一般的なサイトのページに対応させる場合
+
+`https://example.com/event`のような通常のWebページを渡すだけでは、そのサイトの動画一覧を取得できません。日付、会場、カテゴリー、ページ送り、プレイヤー情報、メディアIDなどを理解するサイト専用アダプターが必要です。
+
+アダプターのひな型は生成できます。
+
+```console
+archiveloom adapters scaffold example_site --output ./plugins
+```
+
+例えば、AIコーディングエージェントには次のように依頼します。
+
+> このサイトのアーカイブ動画をArchiveLoomで保存できるようにしてください。
+> 日付と会場で選択できるサイト専用アダプターを作ってください。
+> `docs/engineering-blueprint.ja.md`の設計、安全要件、テスト要件に従ってください。
+
+AIまたは開発者がサイトを調査し、専用アダプターを実装・テストします。完成したアダプターをインストールすると、サイトのページ構造がArchiveLoom共通の動画一覧へ変換され、同じ選択画面とダウンロード処理を利用できる設計です。
+
+## InHigh TVとの関係
+
+現在使用しているInHigh TV専用の`.command`とArchiveLoomは、現時点では別のツールです。
+
+| ツール | 現在の状態 |
+|---|---|
+| InHigh TV専用`.command` | 実際のInHigh TVサイト構造に対応済み。現在のダウンロードではこちらを使用します |
+| ArchiveLoom | 多様なサイトへ展開するための汎用OSS基盤。InHigh TV専用アダプターはまだ同梱していません |
+
+そのため、InHigh TVのページURLをArchiveLoomへ渡すだけでは、現時点ではアーカイブ一覧を取得できません。将来、既存スクリプトのサイト解析部分をInHigh TVアダプターとして分離・移植すれば、ArchiveLoomの選択画面、並列処理、進捗表示、安全確認、完成検証を利用できるようになります。
+
 <p align="center">
   <img src="assets/screenshots/dashboard.svg" width="900" alt="ArchiveLoomの固定進捗画面">
 </p>

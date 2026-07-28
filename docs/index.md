@@ -6,6 +6,27 @@ It can download direct media, HLS, and DASH URLs, or a JSON collection of known 
 
 The project's purpose is to keep site-specific discovery small while reusing the difficult operational parts: selection, bounded parallelism, restart handling, external-drive safeguards, FFmpeg execution, fixed progress, and final verification.
 
+## Can I use it right now?
+
+Yes, if you already have a direct media, HLS, or DASH URL:
+
+```console
+archiveloom download "https://example.com/video/master.m3u8" \
+  --output "/path/to/external-drive/archive" \
+  --check-only
+```
+
+You can also put several known URLs in a [collection file](usage.md#collection-manifest) and choose them interactively:
+
+```console
+archiveloom download collection.json \
+  --output "/path/to/external-drive/archive" \
+  --interactive \
+  --jobs 2
+```
+
+If all you have is a normal website page, check whether a compatible adapter exists. If it does not, the site's discovery logic must be implemented first. The [adapter guide](adapters.md) explains that boundary.
+
 ## Start here
 
 - [Installation](installation.md)
