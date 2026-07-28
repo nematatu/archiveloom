@@ -9,6 +9,7 @@
   <a href="https://nematatu.github.io/archiveloom/">Documentation</a> ·
   <a href="docs/installation.md">Installation</a> ·
   <a href="docs/usage.md">Usage</a> ·
+  <a href="docs/AGENT_PROMPT.md">AI adapter prompt</a> ·
   <a href="docs/adapters.md">Build an adapter</a> ·
   <a href="CONTRIBUTING.md">Contributing</a>
 </p>
@@ -27,9 +28,15 @@
 
 ## What ArchiveLoom is — and is not
 
-**ArchiveLoom is a reusable engine for building reliable bulk media downloaders. It is not a universal website scraper.**
+**ArchiveLoom is the reusable bulk-download core generalized from an InHigh TV-specific downloader and released as cross-platform open-source software.**
 
-Its purpose is to stop every site integration from reimplementing the difficult operational parts: collection selection, bounded parallelism, restart handling, fixed progress, external-drive safeguards, FFmpeg execution, and output verification. Site-specific discovery stays in a small adapter that can be developed and reviewed independently.
+It turns the difficult, reusable parts—collection selection, parallel downloads, restart handling, fixed progress, external-drive safeguards, FFmpeg execution, and output verification—into one shared application. Knowledge of a particular site's pages and player remains in a small adapter.
+
+### The experience we are building toward
+
+Our goal is simple: **give ArchiveLoom a supported video-site page URL, review the discovered videos, and download the ones you select.**
+
+The web makes that harder than it sounds. Every site exposes dates, categories, pagination, player metadata, and stream URLs differently. ArchiveLoom therefore combines a stable download core with installable site adapters instead of pretending that one scraper can safely understand every site forever.
 
 | What you give ArchiveLoom | Does it work out of the box? |
 |---|---|
@@ -43,6 +50,32 @@ If a site adapter does not exist, a developer—or an AI coding agent following 
 ArchiveLoom is a cross-platform CLI/TUI for archiving **collections** of media you own or are authorized to download. It separates a dependable download engine from small, reviewable site adapters, so one site changing does not destabilize the rest of the application.
 
 It is designed for the awkward jobs that a browser download button does not solve: dozens of long recordings, multiple dates or categories, resumable overnight runs, external-drive-only storage, clear progress, and deterministic verification.
+
+## The intended AI-assisted workflow
+
+For a site that ArchiveLoom does not know yet, you do not need to redesign the downloader. Give this repository and the target URL to an AI coding agent:
+
+```text
+Open the ArchiveLoom repository and read docs/AGENT_PROMPT.md completely.
+
+Target site URL: https://example.com/archive
+I am authorized to download: <describe the allowed content>
+I want to select by: <date, category, stage, camera, or another grouping>
+Filename format: <desired format>
+Allowed work: implement and test the adapter; do not start the full download
+
+Follow the prompt's investigation, safety, testing, and handoff requirements.
+```
+
+The expected workflow is:
+
+1. The AI reads [`docs/AGENT_PROMPT.md`](docs/AGENT_PROMPT.md) and the linked engineering contract.
+2. It inspects the actual site instead of guessing its structure.
+3. It implements and tests a narrowly scoped site adapter.
+4. It gives you the exact install, `inspect`, `--check-only`, and download commands.
+5. You review the discovered list and start the download yourself.
+
+This is the current bridge between “unknown webpage URL” and the one-command experience. An AI agent cannot guarantee that every site is supportable: DRM, prohibited access, unstable authentication, or an unavailable public interface must result in a clear stop, not a workaround.
 
 ## What you can use today
 
@@ -90,7 +123,7 @@ A normal page such as `https://example.com/event` requires a site adapter that u
 archiveloom adapters scaffold example_site --output ./plugins
 ```
 
-You can give the site URL and the [engineering blueprint](docs/engineering-blueprint.ja.md) to a developer or AI coding agent and ask it to implement and test that adapter. Once installed, the adapter turns the site's page structure into the same normalized collection used by the download engine.
+You can give the site URL and the [site-adapter agent prompt](docs/AGENT_PROMPT.md) to a developer or AI coding agent and ask it to implement and test that adapter. Once installed, the adapter turns the site's page structure into the same normalized collection used by the download engine.
 
 ### What about InHigh TV?
 
@@ -240,6 +273,7 @@ ArchiveLoom is for content you own, public-domain content, or content you are au
 - [Installation](docs/installation.md)
 - [Usage and exit codes](docs/usage.md)
 - [Architecture](docs/architecture.md)
+- [AI site-adapter prompt](docs/AGENT_PROMPT.md)
 - [AI・実装者向け設計ブループリント（日本語）](docs/engineering-blueprint.ja.md)
 - [Adapter development](docs/adapters.md)
 - [Responsible use](docs/responsible-use.md)

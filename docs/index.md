@@ -1,10 +1,16 @@
 # ArchiveLoom
 
-ArchiveLoom is a cross-platform engine for building reliable bulk media downloaders for sources you are authorized to download. **It is not a universal website scraper.**
+ArchiveLoom is the cross-platform bulk-download core generalized from an InHigh TV-specific downloader and released as open-source software. It provides reusable selection, parallel download, restart, progress, storage-safety, FFmpeg, and verification behavior.
 
-It can download direct media, HLS, and DASH URLs, or a JSON collection of known media URLs. An ordinary webpage works only when a compatible site adapter knows how to discover that site's media. DRM and access-control bypass are intentionally unsupported.
+The project is working toward a simple experience: give ArchiveLoom a supported video-site page URL, review the discovered videos, and download your selection. Because each site exposes its catalog and player differently, an ordinary webpage currently works only when a compatible site adapter exists. DRM and access-control bypass are intentionally unsupported.
 
 The project's purpose is to keep site-specific discovery small while reusing the difficult operational parts: selection, bounded parallelism, restart handling, external-drive safeguards, FFmpeg execution, fixed progress, and final verification.
+
+## Unknown site? Give it to an AI coding agent
+
+Open this repository in your coding agent, provide the target site URL, and tell it to read the [site-adapter agent prompt](AGENT_PROMPT.md). The prompt directs the agent through site investigation, adapter implementation, tests, dry-run validation, and a user-controlled handoff. The user—not the agent—starts the full archive run unless explicitly authorized otherwise.
+
+This AI-assisted adapter step is the current bridge from an unknown webpage to ArchiveLoom's reusable downloader. The long-term goal is to make more URLs work immediately as the official and community adapter catalog grows.
 
 ## Can I use it right now?
 
@@ -33,6 +39,7 @@ If all you have is a normal website page, check whether a compatible adapter exi
 - [Usage](usage.md)
 - [Adapters](adapters.md)
 - [Architecture](architecture.md)
+- [AI site-adapter prompt](AGENT_PROMPT.md)
 - [Responsible use](responsible-use.md)
 - [日本語 README](README.ja.md)
 

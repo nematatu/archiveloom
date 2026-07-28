@@ -2,6 +2,8 @@
 
 Adapters turn a site-specific collection into ArchiveLoom's normalized `MediaItem` model. Keep them small, documented, and independently testable.
 
+If you want an AI coding agent to investigate a target site and build the adapter, start with the complete [site-adapter agent prompt](AGENT_PROMPT.md). It links this contract with the investigation, safety, testing, and handoff requirements.
+
 ## Scaffold
 
 ```console
