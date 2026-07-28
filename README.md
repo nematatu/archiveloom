@@ -15,6 +15,7 @@
 
 <p align="center">
   <a href="https://github.com/nematatu/archiveloom/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/nematatu/archiveloom/ci.yml?branch=main&style=flat-square&label=CI"></a>
+  <a href="https://github.com/nematatu/archiveloom/releases"><img alt="Release" src="https://img.shields.io/github/v/release/nematatu/archiveloom?include_prereleases&style=flat-square"></a>
   <img alt="Python 3.11+" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat-square&logo=python&logoColor=white">
   <img alt="Platforms" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-6C63FF?style=flat-square">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2EA44F?style=flat-square"></a>
@@ -148,7 +149,7 @@ Third-party adapters are normal Python packages registered through the `archivel
 | CI tests | ✅ | ✅ | ✅ |
 | Standalone signed binary | Planned | Planned | Planned |
 
-External-disk detection is intentionally conservative. `--external-only` fails closed when ArchiveLoom cannot prove the selected target is external. Windows and Linux behavior is covered by mocked platform tests locally and by the configured hosted CI matrix; the first hosted run remains visible on GitHub Actions.
+External-disk detection is intentionally conservative. `--external-only` fails closed when ArchiveLoom cannot prove the selected target is external. Windows and Linux behavior is covered by mocked platform tests locally, and the [first hosted matrix run](https://github.com/nematatu/archiveloom/actions/runs/30329505144) passed on all three operating systems.
 
 ## Project layout
 

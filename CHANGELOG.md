@@ -4,6 +4,8 @@ All notable changes are documented here. ArchiveLoom follows [Semantic Versionin
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-07-28
+
 ### Added
 
 - Cross-platform CLI and interactive media selector.
@@ -12,7 +14,4 @@ All notable changes are documented here. ArchiveLoom follows [Semantic Versionin
 - External-storage checks for macOS, Windows, and Linux.
 - Resumable direct downloads, fixed progress UI, run locking, and ffprobe verification.
 - English and Japanese documentation.
-
-## [0.1.0] - 2026-07-28
-
-- Initial public alpha.
+- Initial public alpha packaging, CI, CodeQL, and documentation site.

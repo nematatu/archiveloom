@@ -19,13 +19,16 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact: archiveloom-linux
-            executable: dist/archiveloom
+            binary_name: archiveloom-linux
+            executable: dist/archiveloom-linux
           - os: macos-latest
             artifact: archiveloom-macos
-            executable: dist/archiveloom
+            binary_name: archiveloom-macos
+            executable: dist/archiveloom-macos
           - os: windows-latest
             artifact: archiveloom-windows
-            executable: dist/archiveloom.exe
+            binary_name: archiveloom-windows
+            executable: dist/archiveloom-windows.exe
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -34,7 +37,7 @@ jobs:
           python-version: "3.14"
           cache: pip
       - run: python -m pip install -e ".[dev]"
-      - run: pyinstaller --clean --onefile --name archiveloom src/archiveloom/__main__.py
+      - run: pyinstaller --clean --onefile --name ${{ matrix.binary_name }} src/archiveloom/__main__.py
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
@@ -53,4 +56,4 @@ jobs:
           path: release-assets
       - env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" release-assets/**/* --generate-notes --verify-tag
+        run: gh release create "${GITHUB_REF_NAME}" release-assets/**/* --generate-notes --verify-tag --prerelease

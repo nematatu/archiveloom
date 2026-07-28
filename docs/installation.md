@@ -26,6 +26,8 @@ or:
 uv tool install git+https://github.com/nematatu/archiveloom.git
 ```
 
+Alpha releases also provide unsigned standalone executables for macOS, Windows, and Linux on [GitHub Releases](https://github.com/nematatu/archiveloom/releases). They do not bundle FFmpeg. Review the release notes and keep `ffmpeg`/`ffprobe` on `PATH`; Python tool installation remains the recommended alpha path.
+
 For contributors:
 
 ```console
@@ -125,5 +127,7 @@ pipx install git+https://github.com/nematatu/archiveloom.git
 ```console
 uv tool install git+https://github.com/nematatu/archiveloom.git
 ```
+
+[GitHub Releases](https://github.com/nematatu/archiveloom/releases)では、macOS・Windows・Linux用の未署名アルファ版単体実行ファイルも配布します。FFmpegは同梱しないため、`ffmpeg`・`ffprobe`を別途`PATH`へ設定してください。アルファ期間はPythonツールとしての導入を推奨します。
 
 FFmpegの導入は上記のmacOS・Windows・Linux別コマンドを参照してください。実際のパッケージ名はOSのバージョンやリポジトリにより異なる場合があります。

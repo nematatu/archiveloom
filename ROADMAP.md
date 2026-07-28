@@ -9,7 +9,7 @@ ArchiveLoom is built in small, verifiable stages. Dates are intentionally not pr
 - [x] Cross-platform environment and storage diagnostics
 - [x] Fixed progress UI, state, locking, verification, bounded retries
 - [x] English and Japanese documentation
-- [ ] Validate the first hosted CI run on macOS, Windows, and Linux runners
+- [x] Validate the first hosted CI run on macOS, Windows, and Linux runners
 
 ## 0.2 — Production hardening
 
