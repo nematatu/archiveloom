@@ -1,0 +1,38 @@
+name: Site adapter request
+description: Propose support for a site or service.
+title: "adapter: "
+labels: ["adapter", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: ArchiveLoom does not bypass DRM, paywalls, access controls, or authentication. Do not include private URLs or credentials.
+  - type: input
+    id: site
+    attributes:
+      label: Public site URL
+      placeholder: https://example.org/
+    validations:
+      required: true
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Public discovery workflow
+      description: Explain how an authorized user reaches the media and how items should be grouped or named.
+    validations:
+      required: true
+  - type: textarea
+    id: permission
+    attributes:
+      label: Download authorization
+      description: Explain why downloading is permitted, with a link to applicable terms or documentation when available.
+    validations:
+      required: true
+  - type: checkboxes
+    id: limits
+    attributes:
+      label: Project limits
+      options:
+        - label: The request does not require bypassing DRM, a paywall, authentication, or another access control.
+          required: true
+        - label: I did not include credentials, cookies, signed URLs, or personal data.
+          required: true

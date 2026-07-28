@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If ArchiveLoom supports your research or preservation workflow, please cite it."
+title: "ArchiveLoom"
+type: software
+authors:
+  - name: "nematatu"
+version: 0.1.0
+date-released: 2026-07-28
+repository-code: "https://github.com/nematatu/archiveloom"
+license: MIT

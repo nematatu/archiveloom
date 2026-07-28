@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and support
+    url: https://github.com/nematatu/archiveloom/discussions
+    about: Ask usage questions without opening a bug report.
+  - name: Security report
+    url: https://github.com/nematatu/archiveloom/security/advisories/new
+    about: Privately report a vulnerability.

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "title": "Example conference archive",
+  "items": [
+    {
+      "id": "2026-07-23-stage-a",
+      "title": "Day 1 · Stage A",
+      "url": "https://media.example.org/2026/day-1/stage-a/master.m3u8",
+      "protocol": "hls",
+      "filename": "2026-07-23_stage-a.mp4",
+      "duration_seconds": 7200,
+      "dimensions": {
+        "date": "2026-07-23",
+        "stage": "A"
+      }
+    },
+    {
+      "id": "2026-07-23-stage-b",
+      "title": "Day 1 · Stage B",
+      "url": "https://media.example.org/2026/day-1/stage-b.mp4",
+      "protocol": "direct",
+      "filename": "2026-07-23_stage-b.mp4",
+      "dimensions": {
+        "date": "2026-07-23",
+        "stage": "B"
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+site_name: ArchiveLoom
+site_description: Safe, adapter-driven bulk media archiving
+site_url: https://nematatu.github.io/archiveloom/
+repo_url: https://github.com/nematatu/archiveloom
+repo_name: nematatu/archiveloom
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: slate
+      primary: indigo
+      accent: cyan
+    - scheme: default
+      primary: indigo
+      accent: cyan
+nav:
+  - Home: index.md
+  - 日本語: README.ja.md
+  - Installation: installation.md
+  - Usage: usage.md
+  - Architecture: architecture.md
+  - 設計ブループリント: engineering-blueprint.ja.md
+  - Adapters: adapters.md
+  - Responsible use: responsible-use.md
+  - Translations: translations.md
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.superfences
