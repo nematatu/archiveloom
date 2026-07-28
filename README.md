@@ -10,6 +10,7 @@
   <a href="docs/installation.md">Installation</a> ·
   <a href="docs/usage.md">Usage</a> ·
   <a href="docs/AGENT_PROMPT.md">AI adapter prompt</a> ·
+  <a href="docs/case-study-inhigh-tv.md">InHigh TV case study</a> ·
   <a href="docs/adapters.md">Build an adapter</a> ·
   <a href="CONTRIBUTING.md">Contributing</a>
 </p>
@@ -127,7 +128,9 @@ You can give the site URL and the [site-adapter agent prompt](docs/AGENT_PROMPT.
 
 ### What about InHigh TV?
 
-ArchiveLoom grew out of lessons learned while building a separate InHigh TV-specific downloader, but that downloader is **not bundled** with ArchiveLoom. Version 0.1.0 does not include an InHigh TV adapter, so passing an InHigh TV webpage URL to ArchiveLoom does not currently discover its archive videos. A separately developed and installed adapter would be required.
+InHigh TV is ArchiveLoom's real-world reference implementation, not a hypothetical example. The public [`inhigh-tv-tools`](https://github.com/nematatu/inhigh-tv-tools) project already handles the 2026 badminton archive with date/court selection, bounded parallel downloads, external-HDD-only storage, fixed progress, safe interruption, retries, and verified MP4 output.
+
+ArchiveLoom generalizes those reusable behaviors. The InHigh-specific discovery logic is still in the dedicated tool and is **not yet bundled as an ArchiveLoom adapter**, so an InHigh TV webpage URL does not currently work directly in ArchiveLoom. Read the [InHigh TV case study](docs/case-study-inhigh-tv.md) for the verified implementation, the core/adapter boundary, and a ready-to-use AI request for porting it.
 
 <p align="center">
   <img src="assets/screenshots/dashboard.svg" width="900" alt="ArchiveLoom fixed terminal dashboard">
@@ -274,6 +277,7 @@ ArchiveLoom is for content you own, public-domain content, or content you are au
 - [Usage and exit codes](docs/usage.md)
 - [Architecture](docs/architecture.md)
 - [AI site-adapter prompt](docs/AGENT_PROMPT.md)
+- [InHigh TV real-world case study](docs/case-study-inhigh-tv.md)
 - [AI・実装者向け設計ブループリント（日本語）](docs/engineering-blueprint.ja.md)
 - [Adapter development](docs/adapters.md)
 - [Responsible use](docs/responsible-use.md)

@@ -12,6 +12,8 @@ Open this repository in your coding agent, provide the target site URL, and tell
 
 This AI-assisted adapter step is the current bridge from an unknown webpage to ArchiveLoom's reusable downloader. The long-term goal is to make more URLs work immediately as the official and community adapter catalog grows.
 
+InHigh TV is the concrete reference behind this architecture. The separate public downloader is already implemented and used; its site discovery has simply not yet been packaged as an ArchiveLoom adapter. See the [InHigh TV case study](case-study-inhigh-tv.md) for the verified boundary and migration example.
+
 ## Can I use it right now?
 
 Yes, if you already have a direct media, HLS, or DASH URL:
@@ -40,6 +42,7 @@ If all you have is a normal website page, check whether a compatible adapter exi
 - [Adapters](adapters.md)
 - [Architecture](architecture.md)
 - [AI site-adapter prompt](AGENT_PROMPT.md)
+- [InHigh TV case study](case-study-inhigh-tv.md)
 - [Responsible use](responsible-use.md)
 - [日本語 README](README.ja.md)
 

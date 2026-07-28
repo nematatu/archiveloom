@@ -21,6 +21,8 @@ nav:
   - Architecture: architecture.md
   - AI Adapter Prompt: AGENT_PROMPT.md
   - AI実装プロンプト: AGENT_PROMPT.ja.md
+  - InHigh TV Case Study: case-study-inhigh-tv.md
+  - InHigh TV 実例: case-study-inhigh-tv.ja.md
   - 設計ブループリント: engineering-blueprint.ja.md
   - Adapters: adapters.md
   - Responsible use: responsible-use.md

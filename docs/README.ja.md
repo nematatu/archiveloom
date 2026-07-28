@@ -9,6 +9,7 @@
   <a href="installation.md">インストール</a> ·
   <a href="usage.md">使い方</a> ·
   <a href="AGENT_PROMPT.ja.md">AI実装プロンプト</a> ·
+  <a href="case-study-inhigh-tv.ja.md">InHigh TV実例</a> ·
   <a href="adapters.md">アダプター開発</a> ·
   <a href="https://github.com/nematatu/archiveloom/blob/main/CONTRIBUTING.md">コントリビュート</a>
 </p>
@@ -151,14 +152,16 @@ AIまたは開発者がサイトを調査し、専用アダプターを実装・
 
 ## InHigh TVとの関係
 
-現在使用しているInHigh TV専用の`.command`とArchiveLoomは、現時点では別のツールです。
+InHigh TVは、ArchiveLoomの考え方を説明するための架空の例ではありません。公開リポジトリ[`inhigh-tv-tools`](https://github.com/nematatu/inhigh-tv-tools)には、2026年バドミントン映像を対象とした実用済みの専用ダウンローダーがあります。
 
 | ツール | 現在の状態 |
 |---|---|
-| InHigh TV専用`.command` | 実際のInHigh TVサイト構造に対応済み。現在のダウンロードではこちらを使用します |
+| InHigh TV専用`.command` | 実際のサイト構造に対応し、日付・コート選択、並列保存、外付けHDD限定、進捗、中断、再試行、完成検証を実装済みです |
 | ArchiveLoom | 多様なサイトへ展開するための汎用OSS基盤。InHigh TV専用アダプターはまだ同梱していません |
 
-そのため、InHigh TVのページURLをArchiveLoomへ渡すだけでは、現時点ではアーカイブ一覧を取得できません。将来、既存スクリプトのサイト解析部分をInHigh TVアダプターとして分離・移植すれば、ArchiveLoomの選択画面、並列処理、進捗表示、安全確認、完成検証を利用できるようになります。
+ArchiveLoomは、その専用実装からサイトに依存しない核を抽出・一般化したものです。現時点では、InHigh TVのサイト解析部分は専用`.command`側に残っているため、ページURLをArchiveLoomへ渡すだけではアーカイブ一覧を取得できません。
+
+実装済み機能、サイト固有部分と共通コアの対応、実際の件数、移植をAIへ依頼する完成済みプロンプトは、[InHigh TVケーススタディ](case-study-inhigh-tv.ja.md)で確認できます。
 
 <p align="center">
   <img src="assets/screenshots/dashboard.svg" width="900" alt="ArchiveLoomの固定進捗画面">
@@ -262,6 +265,7 @@ archiveloom adapters scaffold my_site --output ./plugins
 - [使い方・終了コード](usage.md)
 - [アーキテクチャ](architecture.md)
 - [AIサイトアダプター実装プロンプト](AGENT_PROMPT.ja.md)
+- [InHigh TV実例ケーススタディ](case-study-inhigh-tv.ja.md)
 - [AI・実装者向け設計ブループリント](engineering-blueprint.ja.md)
 - [アダプター開発](adapters.md)
 - [責任ある利用](responsible-use.md)
