@@ -30,6 +30,8 @@ ArchiveLoomが目指しているのは、**対応している動画配信サイ�
 |---|---|
 | 動画ファイル、HLS（`.m3u8`）、DASH（`.mpd`）の直接URL | **できます** |
 | 既知の動画URLを記載したArchiveLoom JSONコレクション | **できます** |
+| 公開された`twimg.tweetfile.com/<短縮ID>`ページ | **組み込みTweetFileアダプターで利用できます** |
+| 利用権限のある`gofile.io/d/<コンテンツID>`フォルダ | **公式Gofile APIトークンを設定すると利用できます** |
 | 独自プレイヤーや動画一覧を含む通常のWebページURL | **対応アダプターが必要です** |
 | DRM保護された映像やアクセス制御の回避 | **できません。意図的に対応しません** |
 
@@ -131,6 +133,43 @@ j/k・↑/↓  移動       Space  選択・解除
 a          全選択     Enter  決定
 q          終了
 ```
+
+### 3. 対応済みTweetFileページから一括保存する
+
+TweetFileアダプターは、通常のページURLをArchiveLoomへ渡す実例として組み込まれています。公開コレクションを有限ページングで確認し、各動画の公開HLSを解決して、マスターに記載された最高解像度を選びます。
+
+```console
+archiveloom --lang ja inspect \
+  "https://twimg.tweetfile.com/SHORT_LINK" \
+  --adapter tweetfile
+
+archiveloom --lang ja download \
+  "https://twimg.tweetfile.com/SHORT_LINK" \
+  --adapter tweetfile \
+  --output "/Volumes/ExternalHDD/archive" \
+  --external-only \
+  --check-only
+```
+
+所有または保存を許可された動画だけを対象にしてください。パスワード保護、期限切れ、暗号化・DRM、予期しないリダイレクト、検証済み範囲外のURLは安全側で停止します。
+
+### 4. 利用権限のあるGofileフォルダを一括保存する
+
+組み込みGofileアダプターは、Gofileの公式Bearerトークン認証APIを使い、フォルダと子フォルダを有限ページングでたどって、動画・音声ファイルを一括検出します。最初にGofileプロフィールで取得した公式APIトークンを`ARCHIVELOOM_GOFILE_TOKEN`環境変数へ設定してください。設定後は共有URLだけを渡せます。アダプター名の指定は不要です。
+
+```console
+archiveloom --lang ja inspect \
+  "https://gofile.io/d/CONTENT_ID"
+
+archiveloom --lang ja download \
+  "https://gofile.io/d/CONTENT_ID" \
+  --output "/Volumes/ExternalHDD/archive" \
+  --external-only \
+  --interactive \
+  --jobs 3
+```
+
+トークンをGit、JSONマニフェスト、コマンドライン引数へ記載しないでください。Gofile公式ドキュメントでは、API利用にPremiumが必要となる場合があり、エンドポイントごとの非公開レート制限が適用されると説明されています。ArchiveLoomは、ゲストアカウントの自動作成、Web画面専用の反自動化トークンの再現、アカウント・通信量制限の回避、Premium限定ZIP一括取得を行いません。初版ではパスワード保護フォルダと、動画・音声以外のファイルは対象外です。
 
 ## 一般的なサイトのページに対応させる場合
 

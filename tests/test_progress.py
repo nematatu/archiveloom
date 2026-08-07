@@ -23,3 +23,14 @@ def test_progress_board_updates_known_and_unknown_totals() -> None:
         board.finish("direct", ItemStatus.SKIPPED)
     assert board._finished == 2
     assert board._progress.tasks[board._overall].completed == 2
+
+
+def test_progress_board_treats_site_filename_as_plain_text() -> None:
+    console = Console(file=io.StringIO(), force_terminal=True, width=100)
+    media = item("[red]spoof[/red]", Protocol.DIRECT)
+    board = ProgressBoard(console, [media])
+    task = board._progress.tasks[board._tasks[media.stable_id]]
+
+    rendered = board._progress.columns[1].render(task)
+
+    assert rendered.plain == "[red]spoof[/red].mp4"

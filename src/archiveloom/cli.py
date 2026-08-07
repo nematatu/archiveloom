@@ -9,6 +9,7 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from rich.text import Text
 
 from archiveloom import __version__
 from archiveloom.adapters.base import AdapterError
@@ -201,7 +202,7 @@ def _print_items(items: list[MediaItem]) -> None:
     table.add_column("Protocol")
     table.add_column("Filename")
     for index, item in enumerate(items, 1):
-        table.add_row(str(index), item.title, item.protocol.value, item.filename)
+        table.add_row(str(index), Text(item.title), item.protocol.value, Text(item.filename))
     console.print(table)
 
 

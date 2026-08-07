@@ -4,7 +4,9 @@ from importlib.metadata import entry_points
 
 from archiveloom.adapters.base import Adapter, AdapterError
 from archiveloom.adapters.direct import DirectAdapter
+from archiveloom.adapters.gofile import GofileAdapter
 from archiveloom.adapters.manifest import ManifestAdapter
+from archiveloom.adapters.tweetfile import TweetFileAdapter
 from archiveloom.core.redaction import redact_url
 
 
@@ -13,6 +15,8 @@ class AdapterRegistry:
         self._adapters: dict[str, Adapter] = {}
         self.register(ManifestAdapter())
         self.register(DirectAdapter())
+        self.register(GofileAdapter())
+        self.register(TweetFileAdapter())
         self._load_plugins()
 
     def register(self, adapter: Adapter) -> None:

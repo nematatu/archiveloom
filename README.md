@@ -43,6 +43,8 @@ The web makes that harder than it sounds. Every site exposes dates, categories, 
 |---|---|
 | A direct media, HLS (`.m3u8`), or DASH (`.mpd`) URL | **Yes** |
 | An ArchiveLoom JSON collection containing known media URLs | **Yes** |
+| A public `twimg.tweetfile.com/<short-link>` page | **Yes, through the built-in TweetFile adapter** |
+| An authorized `gofile.io/d/<content-id>` folder | **Yes, with an official Gofile API token** |
 | An ordinary webpage containing an unknown player or media catalog | **Only with a compatible site adapter** |
 | DRM-protected media or access-control bypass | **No, and this is intentionally unsupported** |
 
@@ -117,6 +119,45 @@ Enter        Continue q      Quit
 ```
 
 ### 3. Support a normal website page
+
+The built-in TweetFile adapter is a concrete example of the page-URL workflow. It discovers the
+public collection, follows bounded pagination, resolves each public HLS source, and selects the
+highest advertised variant:
+
+```console
+archiveloom inspect "https://twimg.tweetfile.com/SHORT_LINK" --adapter tweetfile
+
+archiveloom download "https://twimg.tweetfile.com/SHORT_LINK" \
+  --adapter tweetfile \
+  --output "/path/to/external-drive/archive" \
+  --external-only \
+  --check-only
+```
+
+Only download media you own or are authorized to archive. Password-protected, expired,
+encrypted/DRM, redirected, or out-of-scope URLs fail closed.
+
+### 4. Download an authorized Gofile folder
+
+The built-in Gofile adapter recursively discovers video and audio files through Gofile's official,
+Bearer-token-authenticated API. Set `ARCHIVELOOM_GOFILE_TOKEN` from your Gofile profile once, then
+pass the share URL directly; adapter selection is automatic:
+
+```console
+archiveloom inspect "https://gofile.io/d/CONTENT_ID"
+
+archiveloom download "https://gofile.io/d/CONTENT_ID" \
+  --output "/path/to/external-drive/archive" \
+  --external-only \
+  --interactive \
+  --jobs 3
+```
+
+Do not put the token in Git, a manifest, or a command-line argument. Gofile documents that API
+access can require Premium and applies undisclosed per-endpoint rate limits. ArchiveLoom does not
+create guest accounts, reproduce Gofile's website-only anti-automation token, bypass account
+limits, or use the Premium bulk-ZIP endpoint. Password-protected folders and non-media files are
+not supported in this initial adapter.
 
 A normal page such as `https://example.com/event` requires a site adapter that understands that site's dates, categories, pagination, player data, and media identifiers. Generate a plugin skeleton with:
 

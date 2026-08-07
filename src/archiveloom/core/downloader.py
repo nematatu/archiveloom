@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import os
 import queue
+import re
 import shutil
 import subprocess
 import threading
@@ -11,6 +12,7 @@ from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import TextIO
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -25,6 +27,7 @@ from archiveloom.core.storage import require_storage
 from archiveloom.models import DownloadResult, ItemStatus, MediaItem, Protocol
 
 ProgressCallback = Callable[[str, float, float | None, str], None]
+CONTENT_RANGE_RE = re.compile(r"bytes\s+(\d+)-(\d+)/(\d+|\*)", re.IGNORECASE)
 
 
 class DownloadEngine:
@@ -79,9 +82,11 @@ class DownloadEngine:
 
     def _run_item(self, item: MediaItem, progress: ProgressCallback) -> DownloadResult:
         final_path = safe_child(self.output, item.filename)
+        expected_size = _expected_direct_size(item)
         if final_path.exists():
             existing = probe_media(final_path)
-            if existing.valid:
+            size_matches = expected_size is None or existing.size_bytes == expected_size
+            if existing.valid and size_matches:
                 return DownloadResult(
                     item.stable_id,
                     ItemStatus.SKIPPED,
@@ -89,6 +94,15 @@ class DownloadEngine:
                     existing.size_bytes,
                     existing.duration_seconds,
                     "verified existing file",
+                )
+            if existing.valid:
+                return DownloadResult(
+                    item.stable_id,
+                    ItemStatus.FAILED,
+                    final_path,
+                    existing.size_bytes,
+                    existing.duration_seconds,
+                    "An existing final file has an unexpected size; move or remove it explicitly.",
                 )
             return DownloadResult(
                 item.stable_id,
@@ -107,10 +121,20 @@ class DownloadEngine:
             if self.cancelled.is_set():
                 return DownloadResult(item.stable_id, ItemStatus.CANCELLED, message="cancelled")
             try:
-                if item.protocol is Protocol.DIRECT:
+                complete_partial = (
+                    expected_size is not None
+                    and part_path.is_file()
+                    and part_path.stat().st_size == expected_size
+                )
+                if item.protocol is Protocol.DIRECT and not complete_partial:
                     self._download_direct(item, part_path, progress)
-                else:
+                elif item.protocol is not Protocol.DIRECT:
                     self._download_ffmpeg(item, part_path, progress)
+                if expected_size is not None and part_path.stat().st_size != expected_size:
+                    raise RuntimeError(
+                        "download size mismatch: "
+                        f"expected {expected_size} bytes, got {part_path.stat().st_size}"
+                    )
                 progress(item.stable_id, 0, None, "verifying")
                 verified = probe_media(part_path)
                 if not verified.valid:
@@ -133,6 +157,19 @@ class DownloadEngine:
                 )
             except Exception as exc:
                 last_error = redact_text(str(exc))
+                complete_but_invalid = (
+                    expected_size is not None
+                    and part_path.is_file()
+                    and part_path.stat().st_size == expected_size
+                )
+                if complete_but_invalid:
+                    if attempt < self.attempts and not self.cancelled.is_set():
+                        part_path.unlink()
+                    else:
+                        rejected_path = part_path.with_name(
+                            f"{part_path.stem}.invalid{part_path.suffix}"
+                        )
+                        os.replace(part_path, rejected_path)
                 if attempt < self.attempts and not self.cancelled.is_set():
                     progress(item.stable_id, 0, None, f"retrying {attempt}/{self.attempts}")
                     time.sleep(min(5 * attempt, 15))
@@ -145,27 +182,77 @@ class DownloadEngine:
         progress: ProgressCallback,
     ) -> None:
         offset = part_path.stat().st_size if part_path.exists() else 0
+        expected_size = _expected_direct_size(item)
+        if expected_size is not None and offset > expected_size:
+            offset = 0
         headers = dict(item.headers)
         if offset:
             headers["Range"] = f"bytes={offset}-"
         timeout = httpx.Timeout(connect=15, read=30, write=30, pool=30)
+        event_hooks: dict[str, list[Callable[[httpx.Request], None]]] | None = None
+        download_scope = item.metadata.get("download_url_scope")
+        if isinstance(download_scope, dict):
+            event_hooks = {
+                "request": [lambda request: _require_download_url_scope(request, download_scope)]
+            }
         with (
-            httpx.Client(follow_redirects=True, timeout=timeout) as client,
+            httpx.Client(
+                follow_redirects=True,
+                timeout=timeout,
+                event_hooks=event_hooks,
+            ) as client,
             client.stream("GET", item.media_url, headers=headers) as response,
         ):
             response.raise_for_status()
             append = offset > 0 and response.status_code == 206
+            length_header = response.headers.get("content-length")
+            try:
+                length = int(length_header) if length_header is not None else None
+            except ValueError as exc:
+                raise RuntimeError("server returned an invalid Content-Length") from exc
+            if length is not None and length < 0:
+                raise RuntimeError("server returned an invalid Content-Length")
+            range_total: int | None = None
+            range_length: int | None = None
+            if append:
+                content_range = response.headers.get("content-range", "")
+                match = CONTENT_RANGE_RE.fullmatch(content_range.strip())
+                if match is None:
+                    raise RuntimeError("server returned an invalid Content-Range for resume")
+                range_start = int(match.group(1))
+                range_end = int(match.group(2))
+                total_text = match.group(3)
+                range_total = int(total_text) if total_text != "*" else None
+                range_length = range_end - range_start + 1
+                if (
+                    range_start != offset
+                    or range_end < range_start
+                    or (length is not None and range_length != length)
+                    or (range_total is not None and range_end >= range_total)
+                    or (
+                        expected_size is not None
+                        and range_total is not None
+                        and range_total != expected_size
+                    )
+                ):
+                    raise RuntimeError("server returned an invalid Content-Range for resume")
             completed = offset if append else 0
-            length = int(response.headers.get("content-length", "0") or 0)
-            total = completed + length if length else None
+            total = (
+                expected_size or range_total or (completed + length if length is not None else None)
+            )
             mode = "ab" if append else "wb"
             with part_path.open(mode) as handle:
+                response_start = completed
                 for chunk in response.iter_bytes(1024 * 1024):
                     if self.cancelled.is_set():
                         raise RuntimeError("cancelled")
                     handle.write(chunk)
                     completed += len(chunk)
                     progress(item.stable_id, completed, total, "downloading")
+                if range_length is not None and completed - response_start != range_length:
+                    handle.seek(response_start)
+                    handle.truncate()
+                    raise RuntimeError("server response length did not match Content-Range")
                 handle.flush()
                 os.fsync(handle.fileno())
 
@@ -284,6 +371,40 @@ def _read_lines(stream: TextIO, destination: queue.Queue[str | None]) -> None:
             destination.put(line)
     finally:
         destination.put(None)
+
+
+def _expected_direct_size(item: MediaItem) -> int | None:
+    if item.protocol is not Protocol.DIRECT:
+        return None
+    value = item.metadata.get("expected_size_bytes")
+    return value if isinstance(value, int) and not isinstance(value, bool) and value > 0 else None
+
+
+def _require_download_url_scope(request: httpx.Request, raw_scope: dict[object, object]) -> None:
+    scheme = raw_scope.get("scheme")
+    host_suffix = raw_scope.get("host_suffix")
+    path_prefix = raw_scope.get("path_prefix")
+    if (
+        not isinstance(scheme, str)
+        or not scheme
+        or not isinstance(host_suffix, str)
+        or not host_suffix
+        or not isinstance(path_prefix, str)
+        or not path_prefix
+    ):
+        raise RuntimeError("adapter supplied an invalid download URL scope")
+    parsed = urlsplit(str(request.url))
+    host = (parsed.hostname or "").lower()
+    normalized_suffix = host_suffix.lower()
+    if (
+        parsed.scheme.lower() != scheme.lower()
+        or not (host == normalized_suffix or host.endswith(f".{normalized_suffix}"))
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.port not in {None, 443}
+        or not parsed.path.startswith(path_prefix)
+    ):
+        raise RuntimeError("download redirect left the adapter's verified URL scope")
 
 
 def _collect_lines(stream: TextIO, destination: list[str]) -> None:

@@ -16,6 +16,13 @@ def make_item(stable_id: str) -> MediaItem:
     )
 
 
+def test_selector_label_treats_site_text_as_plain_text() -> None:
+    item = make_item("[bold]name[/]")
+    row = MediaRow(item)
+
+    assert row._label().plain == "[x]  Item [bold]name[/]  2026-07-23"
+
+
 @pytest.mark.anyio
 async def test_selector_keyboard_workflow(anyio_backend: str) -> None:
     del anyio_backend

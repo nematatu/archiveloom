@@ -4,6 +4,22 @@ All notable changes are documented here. ArchiveLoom follows [Semantic Versionin
 
 ## [Unreleased]
 
+### Added
+
+- Built-in Gofile adapter for authorized `gofile.io/d/<content-id>` folders through Gofile's
+  official token-authenticated API, with bounded recursive discovery, media-only filtering,
+  collision-resistant filenames, rate-limit handling, and fail-closed credential and URL checks.
+- Built-in TweetFile adapter for authorized public `twimg.tweetfile.com` collections, including
+  bounded pagination, deterministic filenames, highest-variant HLS selection, and fail-closed
+  access, schema, redirect, encryption, and CDN checks.
+
+### Fixed
+
+- Validate exact sizes supplied for direct downloads, reuse fully transferred partial files, and
+  reject mismatched `Content-Range` responses before appending resumed bytes.
+- Render site-provided titles, filenames, and selection dimensions as plain terminal text instead
+  of interpreting Rich/Textual markup.
+
 ## [0.1.0] - 2026-07-28
 
 ### Added

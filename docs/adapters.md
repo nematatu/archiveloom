@@ -2,6 +2,23 @@
 
 Adapters turn a site-specific collection into ArchiveLoom's normalized `MediaItem` model. Keep them small, documented, and independently testable.
 
+## Built-in site adapters
+
+`gofile` accepts only `https://gofile.io/d/<content-id>` shares the user is authorized to
+download. It requires the official Gofile API token in `ARCHIVELOOM_GOFILE_TOKEN`, uses only the
+documented Bearer-authenticated contents endpoint, walks folders with bounded pagination, and
+returns video/audio files with deterministic ID-qualified filenames. It rejects missing or
+insufficient credentials, password-protected/private/unavailable content, malformed schemas,
+duplicates, unsafe links, redirects, and excessive collection sizes. It does not create guest
+accounts, reproduce website anti-automation tokens, evade rate or traffic limits, or invoke the
+Premium bulk-ZIP flow. Gofile may require a Premium/API-enabled account.
+
+`tweetfile` accepts only public `https://twimg.tweetfile.com/<short-link>` pages. It uses the
+site's browser-used public read API with bounded pagination, resolves each item to the verified
+media CDN, and selects the highest HLS variant advertised by the master playlist. It rejects
+password-protected, expired, encrypted/DRM, redirected, malformed, duplicate, and out-of-scope
+responses. No authentication, advertising, attribution, or public-IP endpoints are used.
+
 If you want an AI coding agent to investigate a target site and build the adapter, start with the complete [site-adapter agent prompt](AGENT_PROMPT.md). It links this contract with the investigation, safety, testing, and handoff requirements.
 
 ## Scaffold

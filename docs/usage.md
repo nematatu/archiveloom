@@ -87,7 +87,7 @@ ArchiveLoom stores operational files under the selected target:
 ```
 
 - A final file is skipped only after `ffprobe` can read an audio or video stream.
-- Direct HTTP downloads try Range resume when a partial file exists. ETag/Last-Modified validation is planned for 0.2, so the server may force a clean restart and the final `ffprobe` check remains mandatory.
+- Direct HTTP downloads try Range resume when a partial file exists and append only after validating the server's `Content-Range` start, end, response length, and known total size. When an adapter supplies an exact expected size, ArchiveLoom validates it and can verify a fully transferred partial without downloading it again. A complete-sized partial that fails verification is preserved with `.invalid` in its name so the next run can start cleanly. ETag/Last-Modified validation is planned for 0.2, so the server may still force a clean restart and the final `ffprobe` check remains mandatory.
 - An existing final file that fails verification is never overwritten automatically; move or remove it explicitly after inspection.
 - HLS/DASH retries restart the current item in the initial alpha.
 - A per-output lock prevents two writers from using the same directory.

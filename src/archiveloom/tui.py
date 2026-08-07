@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import ClassVar
 
+from rich.text import Text
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
@@ -27,11 +28,13 @@ class MediaRow(ListItem):
         self.selected = selected
         self.query_one("#label", Label).update(self._label())
 
-    def _label(self) -> str:
+    def _label(self) -> Text:
         mark = "[x]" if self.selected else "[ ]"
         details = " · ".join(self.item.dimensions.values())
-        suffix = f"  [dim]{details}[/]" if details else ""
-        return f"{mark}  {self.item.title}{suffix}"
+        label = Text(f"{mark}  {self.item.title}")
+        if details:
+            label.append(f"  {details}", style="dim")
+        return label
 
 
 class SelectorApp(App[list[str]]):

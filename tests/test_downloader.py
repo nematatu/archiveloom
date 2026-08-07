@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any, ClassVar
 
+import httpx
 import pytest
 
 import archiveloom.core.downloader as downloader
@@ -77,6 +78,26 @@ def test_run_item_skips_verified_existing(monkeypatch: Any, tmp_path: Path) -> N
     result = DownloadEngine(tmp_path, attempts=1)._run_item(media_item(), lambda *args: None)
     assert result.status is ItemStatus.SKIPPED
     assert result.path == final
+
+
+def test_run_item_rejects_existing_file_with_wrong_expected_size(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    final = tmp_path / "item-1.mp4"
+    final.write_bytes(b"video")
+    item = media_item()
+    object.__setattr__(item, "metadata", {"expected_size_bytes": 10})
+    monkeypatch.setattr(
+        downloader,
+        "probe_media",
+        lambda path: ProbeResult(True, 3.0, path.stat().st_size, ("video",)),
+    )
+
+    result = DownloadEngine(tmp_path, attempts=1)._run_item(item, lambda *args: None)
+
+    assert result.status is ItemStatus.FAILED
+    assert "unexpected size" in result.message
+    assert final.read_bytes() == b"video"
 
 
 def test_run_item_never_overwrites_invalid_existing(monkeypatch: Any, tmp_path: Path) -> None:
@@ -191,10 +212,18 @@ def test_run_item_honors_cancellation(tmp_path: Path) -> None:
 
 
 class FakeResponse:
-    def __init__(self, status_code: int, chunks: list[bytes]) -> None:
+    def __init__(
+        self,
+        status_code: int,
+        chunks: list[bytes],
+        *,
+        content_range: str | None = None,
+    ) -> None:
         self.status_code = status_code
         self.chunks = chunks
         self.headers = {"content-length": str(sum(map(len, chunks)))}
+        if content_range:
+            self.headers["content-range"] = content_range
 
     def __enter__(self) -> "FakeResponse":
         return self
@@ -244,7 +273,7 @@ def test_direct_download_restarts_when_server_ignores_range(
 def test_direct_download_appends_partial_range(monkeypatch: Any, tmp_path: Path) -> None:
     part = tmp_path / "part.mp4"
     part.write_bytes(b"old")
-    FakeClient.response = FakeResponse(206, [b"new"])
+    FakeClient.response = FakeResponse(206, [b"new"], content_range="bytes 3-5/6")
     monkeypatch.setattr(downloader.httpx, "Client", FakeClient)
     updates: list[tuple[object, ...]] = []
     DownloadEngine(tmp_path)._download_direct(
@@ -252,6 +281,158 @@ def test_direct_download_appends_partial_range(monkeypatch: Any, tmp_path: Path)
     )
     assert part.read_bytes() == b"oldnew"
     assert updates[-1][1:3] == (6, 6)
+
+
+def test_direct_download_rejects_wrong_resume_range(monkeypatch: Any, tmp_path: Path) -> None:
+    part = tmp_path / "part.mp4"
+    part.write_bytes(b"old")
+    FakeClient.response = FakeResponse(206, [b"new"], content_range="bytes 0-2/6")
+    monkeypatch.setattr(downloader.httpx, "Client", FakeClient)
+
+    with pytest.raises(RuntimeError, match="Content-Range"):
+        DownloadEngine(tmp_path)._download_direct(media_item(), part, lambda *args: None)
+
+
+@pytest.mark.parametrize(
+    "content_range",
+    [
+        "bytes 3-1/6",
+        "bytes 3-5/7",
+        "bytes 3-6/6",
+    ],
+)
+def test_direct_download_rejects_inconsistent_resume_metadata(
+    monkeypatch: Any, tmp_path: Path, content_range: str
+) -> None:
+    part = tmp_path / "part.mp4"
+    part.write_bytes(b"old")
+    item = media_item()
+    object.__setattr__(item, "metadata", {"expected_size_bytes": 6})
+    FakeClient.response = FakeResponse(206, [b"new"], content_range=content_range)
+    monkeypatch.setattr(downloader.httpx, "Client", FakeClient)
+
+    with pytest.raises(RuntimeError, match="Content-Range"):
+        DownloadEngine(tmp_path)._download_direct(item, part, lambda *args: None)
+
+
+def test_direct_download_rejects_redirect_outside_adapter_scope(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    real_client = httpx.Client
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if len(requests) == 1:
+            return httpx.Response(302, headers={"Location": "https://evil.example/download/a"})
+        pytest.fail("out-of-scope redirect must be rejected before a second request")
+
+    def client_factory(**kwargs: object) -> httpx.Client:
+        return real_client(transport=httpx.MockTransport(handler), **kwargs)
+
+    monkeypatch.setattr(downloader.httpx, "Client", client_factory)
+    item = MediaItem(
+        stable_id="gofile:item",
+        title="item",
+        media_url="https://store1.gofile.io/download/a",
+        protocol=Protocol.DIRECT,
+        filename="item.mp4",
+        source_url="https://gofile.io/d/ABC123",
+        metadata={
+            "download_url_scope": {
+                "scheme": "https",
+                "host_suffix": "gofile.io",
+                "path_prefix": "/download/",
+            }
+        },
+    )
+
+    with pytest.raises(RuntimeError, match="verified URL scope"):
+        DownloadEngine(tmp_path)._download_direct(item, tmp_path / "part.mp4", lambda *args: None)
+
+    assert len(requests) == 1
+
+
+def test_direct_download_checks_received_bytes_against_range(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    part = tmp_path / "part.mp4"
+    part.write_bytes(b"old")
+    FakeClient.response = FakeResponse(206, [b"no"], content_range="bytes 3-5/*")
+    FakeClient.response.headers.pop("content-length")
+    monkeypatch.setattr(downloader.httpx, "Client", FakeClient)
+
+    with pytest.raises(RuntimeError, match="response length"):
+        DownloadEngine(tmp_path)._download_direct(media_item(), part, lambda *args: None)
+
+    assert part.read_bytes() == b"old"
+
+
+def test_run_item_checks_expected_direct_size(monkeypatch: Any, tmp_path: Path) -> None:
+    engine = DownloadEngine(tmp_path, attempts=1)
+    item = media_item()
+    object.__setattr__(item, "metadata", {"expected_size_bytes": 10})
+
+    def fake_download(_item: MediaItem, path: Path, progress: object) -> None:
+        del _item, progress
+        path.write_bytes(b"short")
+
+    monkeypatch.setattr(engine, "_download_direct", fake_download)
+    result = engine._run_item(item, lambda *args: None)
+
+    assert result.status is ItemStatus.FAILED
+    assert "size mismatch" in result.message
+
+
+def test_run_item_reuses_complete_partial_before_network(monkeypatch: Any, tmp_path: Path) -> None:
+    engine = DownloadEngine(tmp_path, attempts=1)
+    item = media_item()
+    object.__setattr__(item, "metadata", {"expected_size_bytes": 5})
+    partial = tmp_path / ".archiveloom" / "partial"
+    partial.mkdir(parents=True)
+    key = downloader.hashlib.sha256(item.stable_id.encode("utf-8")).hexdigest()
+    (partial / f"{key}.part.mp4").write_bytes(b"video")
+    monkeypatch.setattr(
+        engine,
+        "_download_direct",
+        lambda *args: pytest.fail("complete partial should be verified without downloading"),
+    )
+    monkeypatch.setattr(
+        downloader,
+        "probe_media",
+        lambda path: ProbeResult(True, 1.0, path.stat().st_size, ("video",)),
+    )
+
+    result = engine._run_item(item, lambda *args: None)
+
+    assert result.status is ItemStatus.COMPLETED
+
+
+def test_run_item_quarantines_invalid_complete_partial(monkeypatch: Any, tmp_path: Path) -> None:
+    engine = DownloadEngine(tmp_path, attempts=1)
+    item = media_item()
+    object.__setattr__(item, "metadata", {"expected_size_bytes": 5})
+    partial = tmp_path / ".archiveloom" / "partial"
+    partial.mkdir(parents=True)
+    key = downloader.hashlib.sha256(item.stable_id.encode("utf-8")).hexdigest()
+    part_path = partial / f"{key}.part.mp4"
+    part_path.write_bytes(b"video")
+    monkeypatch.setattr(
+        engine,
+        "_download_direct",
+        lambda *args: pytest.fail("complete partial should be checked before downloading"),
+    )
+    monkeypatch.setattr(
+        downloader,
+        "probe_media",
+        lambda path: ProbeResult(False, None, path.stat().st_size, (), "invalid media"),
+    )
+
+    result = engine._run_item(item, lambda *args: None)
+
+    assert result.status is ItemStatus.FAILED
+    assert not part_path.exists()
+    assert (partial / f"{key}.part.invalid.mp4").read_bytes() == b"video"
 
 
 class ImmediateThread:

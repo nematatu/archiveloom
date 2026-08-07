@@ -56,7 +56,9 @@ archiveloom = "archiveloom.cli:app"
 
 [project.entry-points."archiveloom.adapters"]
 direct = "archiveloom.adapters.direct:DirectAdapter"
+gofile = "archiveloom.adapters.gofile:GofileAdapter"
 manifest = "archiveloom.adapters.manifest:ManifestAdapter"
+tweetfile = "archiveloom.adapters.tweetfile:TweetFileAdapter"
 
 [project.urls]
 Homepage = "https://github.com/nematatu/archiveloom"

@@ -20,7 +20,7 @@ class ProgressBoard:
     def __init__(self, console: Console, items: list[MediaItem]) -> None:
         self._progress = Progress(
             SpinnerColumn(),
-            TextColumn("[bold]{task.description}"),
+            TextColumn("{task.description}", style="bold", markup=False),
             BarColumn(),
             TaskProgressColumn(),
             TimeRemainingColumn(),

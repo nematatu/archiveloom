@@ -9,7 +9,12 @@ from archiveloom.adapters.registry import AdapterRegistry
 
 
 def test_builtin_adapters_are_registered() -> None:
-    assert {adapter.name for adapter in AdapterRegistry().all()} >= {"direct", "manifest"}
+    assert {adapter.name for adapter in AdapterRegistry().all()} >= {
+        "direct",
+        "gofile",
+        "manifest",
+        "tweetfile",
+    }
 
 
 def test_direct_adapter_is_selected_for_http_media() -> None:
